@@ -1,0 +1,33 @@
+/target
+/.github
+.gitignore
+src/main/resources/application-local.properties
+HELP.md
+.env
+**/*test*
+**/*Test*
+**/test/**
+**/tests/**
+src/test/**
+src/main/resources/static/**
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+docs/
+*.md
+
+# CI/CD
+.github/
+bitbucket-pipelines.yml
+Jenkinsfile
+docker-compose*.yml
