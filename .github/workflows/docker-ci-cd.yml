@@ -1,4 +1,4 @@
-name: Docker Image CI - Notification Service
+name: Docker Image CI/CD - Notification Service
 
 env:
   DOCKER_IMAGE: notification-service
