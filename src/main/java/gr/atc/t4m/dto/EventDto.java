@@ -1,7 +1,5 @@
 package gr.atc.t4m.dto;
 
-import java.time.OffsetDateTime;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

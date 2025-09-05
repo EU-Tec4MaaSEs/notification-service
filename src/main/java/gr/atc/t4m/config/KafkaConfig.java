@@ -40,8 +40,8 @@ public class KafkaConfig {
 
         // Configure advanced JSON deserialization
         JsonDeserializer<EventDto> jsonDeserializer = new JsonDeserializer<>(EventDto.class, objectMapper);
-        jsonDeserializer.addTrustedPackages("gr.atc.t4m.dto", "gr.atc.t4m.model");
-        jsonDeserializer.setUseTypeHeaders(true);
+        jsonDeserializer.setUseTypeHeaders(false); // Disable type headers
+        jsonDeserializer.addTrustedPackages("*"); // Trust all packages
 
 
         return new DefaultKafkaConsumerFactory<>(props,

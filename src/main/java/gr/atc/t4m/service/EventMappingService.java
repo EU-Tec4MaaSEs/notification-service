@@ -15,7 +15,6 @@ import static gr.atc.t4m.exception.CustomExceptions.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
