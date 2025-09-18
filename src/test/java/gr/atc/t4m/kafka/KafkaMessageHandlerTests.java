@@ -314,13 +314,13 @@ public class KafkaMessageHandlerTests {
     }
 
     @Test
-    @DisplayName("Should trim and uppercase organization name")
-    void shouldTrimAndUppercaseOrganizationName() {
+    @DisplayName("Should trim and format organization name")
+    void shouldTrimAndFormatOrganizationName() {
         // Given
         EventDto eventWithUntrimmedOrg = EventDto.builder()
                 .priority(Priority.HIGH.toString())
                 .sourceComponent("TestComponent")
-                .organization("  test_org  ")
+                .organization("  test org  ")
                 .type("TEST_EVENT")
                 .description("Test description")
                 .build();
@@ -332,14 +332,14 @@ public class KafkaMessageHandlerTests {
                 .build();
 
         when(eventMappingService.retrieveEventMappingByTopic(topic)).thenReturn(eventMapping);
-        when(notificationService.retrieveUserIdsPerUserRolesAndOrganization(userRoles, "TEST_ORG"))
+        when(notificationService.retrieveUserIdsPerUserRolesAndOrganization(userRoles, "TEST-ORG"))
                 .thenReturn(users);
 
         // When
         kafkaMessageHandler.consume(eventWithUntrimmedOrg, topic);
 
         // Then
-        verify(notificationService).retrieveUserIdsPerUserRolesAndOrganization(userRoles, "TEST_ORG");
+        verify(notificationService).retrieveUserIdsPerUserRolesAndOrganization(userRoles, "TEST-ORG");
     }
 
     @Test

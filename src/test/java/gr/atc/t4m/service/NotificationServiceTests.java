@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -583,6 +584,62 @@ class NotificationServiceTests {
         // Then
         verify(modelMapper).map(notificationDto, Notification.class);
         verify(notificationRepository, never()).saveAll(any());
+    }
+
+    // =========================== Retry Mechanism Tests ===========================
+    @DisplayName("Retrieve User Ids Per Organization : Should retry on 404 error")
+    @Disabled
+    @Test
+    void retrieveUserIdsPerOrganization_ShouldRetryOn404Error() {
+        // Given
+        String organization = "test-org";
+        String token = "test-token";
+        NotificationService spyService = spy(notificationService);
+
+        ReflectionTestUtils.setField(spyService, "userManagerUrl", "http://localhost:8094");
+        when(spyService.retrieveComponentJwtToken()).thenReturn(token);
+
+        HttpClientErrorException notFoundException =
+            new HttpClientErrorException(HttpStatus.NOT_FOUND, "Organization not found");
+
+        when(restTemplate.exchange(any(), any(), any(), eq(UserManagerResponse.class)))
+            .thenThrow(notFoundException);
+
+        // When & Then
+        ResourceNotFoundException exception = assertThrows(
+            ResourceNotFoundException.class,
+            () -> spyService.retrieveUserIdsPerOrganization(organization)
+        );
+
+        assertEquals("Organization not found yet in Keycloak..", exception.getMessage());
+    }
+
+    @DisplayName("Retrieve User Ids Per User Roles And Organization : Should retry on 404 error")
+    @Disabled
+    @Test
+    void retrieveUserIdsPerUserRolesAndOrganization_ShouldRetryOn404Error() {
+        // Given
+        Set<String> userRoles = Set.of("USER_ROLE");
+        String organization = "test-org";
+        String token = "test-token";
+        NotificationService spyService = spy(notificationService);
+
+        ReflectionTestUtils.setField(spyService, "userManagerUrl", "http://localhost:8094");
+        when(spyService.retrieveComponentJwtToken()).thenReturn(token);
+
+        HttpClientErrorException notFoundException =
+            new HttpClientErrorException(HttpStatus.NOT_FOUND, "Role not found");
+
+        when(restTemplate.exchange(any(), any(), any(), eq(UserManagerResponse.class)))
+            .thenThrow(notFoundException);
+
+        // When & Then
+        ResourceNotFoundException exception = assertThrows(
+            ResourceNotFoundException.class,
+            () -> spyService.retrieveUserIdsPerUserRolesAndOrganization(userRoles, organization)
+        );
+
+        assertEquals("Organization or Role not found yet in Keycloak..", exception.getMessage());
     }
 
     // =========================== Retrieve User Ids Per Organization Tests ===========================

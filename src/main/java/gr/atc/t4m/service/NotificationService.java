@@ -16,9 +16,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -189,6 +192,13 @@ public class NotificationService implements INotificationService {
      * @param organization : Organization
      * @return List<UserDto>
      */
+    // As the Kafka Event message reaches both Notif. Service and User Manager, the latter should first create the Organization
+    // And Then the Notification Service request the resource. Thus, we introduce here a retry mechanism only for 404 errors
+    @Retryable(
+            value = { ResourceNotFoundException.class }, // retry only on 404
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2) // exponential backoff
+    )
     @Override
     public List<UserDto> retrieveUserIdsPerOrganization(String organization) {
         // Retrieve Component's JWT Token - Client credentials
@@ -220,6 +230,12 @@ public class NotificationService implements INotificationService {
                     .map(UserManagerResponse::getData)
                     .orElse(Collections.emptyList());
         } catch (RestClientException e) {
+            if (e instanceof HttpClientErrorException ex) {
+                if (ex.getStatusCode().value() == 404) {
+                    throw new ResourceNotFoundException("Organization not found yet in Keycloak..");
+                }
+            }
+
             log.error("Unable to retrieve users for organization {} -  Error: {}", organization, e.getMessage());
             return Collections.emptyList();
         }
@@ -232,6 +248,13 @@ public class NotificationService implements INotificationService {
      * @param organization : Organization
      * @return List<UserDto>
      */
+    // As the Kafka Event message reaches both Notif. Service and User Manager, the latter should first create the Organization
+    // And Then the Notification Service request the resource. Thus, we introduce here a retry mechanism only for 404 errors
+    @Retryable(
+            value = { ResourceNotFoundException.class }, // retry only on 404
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2) // exponential backoff
+    )
     @Override
     public List<UserDto> retrieveUserIdsPerUserRolesAndOrganization(Set<String> userRoles, String organization) {
         // Retrieve Component's JWT Token - Client credentials
@@ -264,6 +287,11 @@ public class NotificationService implements INotificationService {
 
                 allUsers.addAll(users);
             } catch (RestClientException e) {
+                if (e instanceof HttpClientErrorException ex) {
+                    if (ex.getStatusCode().value() == 404) {
+                        throw new ResourceNotFoundException("Organization or Role not found yet in Keycloak..");
+                    }
+                }
                 log.error("Unable to locate Users for Role: {} - Error: {}", role, e.getMessage());
             }
         });

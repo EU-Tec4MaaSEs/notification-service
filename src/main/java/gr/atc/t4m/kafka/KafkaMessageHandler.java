@@ -64,6 +64,9 @@ public class KafkaMessageHandler {
         }
 
         log.info("Event Received: {}", event);
+
+        // Convert organization to Identity Manager specific format
+        String formattedOrganization = String.join("-", event.organization().trim().toUpperCase().split("\\s+"));
         try {
             // Retrieve User Roles from Mappings (if exist)
             Set<String> userRolesPerEventType = new HashSet<>();
@@ -74,7 +77,7 @@ public class KafkaMessageHandler {
             }
 
             // Locate Related User IDs
-            List<UserDto> users = determineRecipientsOfNotification(event, userRolesPerEventType, topic);
+            List<UserDto> users = determineRecipientsOfNotification(event, userRolesPerEventType, topic, formattedOrganization);
 
             // Generate Notification
             NotificationDto eventNotification = generateNotificationFromEvent(event);
@@ -86,7 +89,7 @@ public class KafkaMessageHandler {
             String notificationMessage = objectMapper.writeValueAsString(eventNotification);
             if (userRolesPerEventType.isEmpty() || userRolesPerEventType.contains(GLOBAL_EVENT_MAPPINGS))
                 // Send notification globally to pilot users
-                webSocketService.notifyUsersAndRolesViaWebSocket(notificationMessage, event.organization().toUpperCase());
+                webSocketService.notifyUsersAndRolesViaWebSocket(notificationMessage, formattedOrganization);
             else
                 // Send notification through WebSockets to all user roles in the plant
                 userRolesPerEventType.forEach(role -> webSocketService.notifyUsersAndRolesViaWebSocket(notificationMessage, role));
@@ -105,10 +108,8 @@ public class KafkaMessageHandler {
     /*
      * Helper method to locate the UserIDs that will receive the Notification
      */
-    private List<UserDto> determineRecipientsOfNotification(EventDto event, Set<String> userRolesPerEventType, String topic) {
+    private List<UserDto> determineRecipientsOfNotification(EventDto event, Set<String> userRolesPerEventType, String topic, String formattedOrganization) {
         List<UserDto> relatedUsers = new ArrayList<>();
-
-        String formattedOrganization = event.organization().trim().toUpperCase();
 
         // Handle empty mappings case - Creating mapping and retrieve all pilot users
         if (userRolesPerEventType.isEmpty()) {

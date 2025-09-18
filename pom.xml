@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.0</version>
+		<version>3.5.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>gr.atc.t4m</groupId>
 	<artifactId>notification-service</artifactId>
-	<version>v0.5</version>
+	<version>0.5-SNAPSHOT</version>
 	<name>notification-service</name>
 	<description>Service to manage events from T4M and generate Notifications</description>
 	<inceptionYear>2025</inceptionYear>
@@ -145,6 +145,12 @@
 			<artifactId>postgresql</artifactId>
 			<scope>test</scope>
 		</dependency>
+        <!-- Retry Mechanisms -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+            <version>2.0.12</version>
+        </dependency>
 		<!-- Monitoring -->
 		<!-- <dependency>
 			<groupId>io.micrometer</groupId>
